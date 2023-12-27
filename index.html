@@ -54,14 +54,20 @@
             errSelector: '.form-message',
             rules: [
                 Validator.isRequired('#fullname'),
-                Validator.isEmail('#email'),
-                Validator.isPassword('#password',6),
-                // Validator.isRequired('#password_confirmation')
-                Validator.isConFirmed('#password_confirmation',function(){
-                    
-                }),
+                Validator.isRequired('#email','Vui Lòng Nhập Trường Này'),
+                Validator.isEmail('#email','Hãy nhập đúng kiểu email'),
+                Validator.isRequired('#password','Vui Lòng Nhập Trường Này'),
 
-            ]
+                Validator.isPassword('#password',6,'Mật khẩu phải có 6 ký tự'),
+                Validator.isRequired('#password_confirmation','Vui Lòng Nhập Trường Này'),
+                Validator.isConFirmed('#password_confirmation',function(){
+                    return document.querySelector('#form-1 #password').value;
+                },'Bạn đã nhập sai mật khẩu nhập lại'),
+
+            ],
+            onSubmit:function(data){
+              console.log(data)
+            }
         }
         
         );

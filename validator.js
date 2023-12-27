@@ -1,13 +1,23 @@
 //Đối tượng Validator
 Validator = function (options) {
-    
+    var selectorRules = {};
 
     //Hàm thực hiện validate
     function validate(inputElement, rule) {
-        var errMessage = rule.test(inputElement.value);
+        var errMessage
         var errMessageRender = inputElement.parentElement.querySelector(options.errSelector)
         var errMessageRenderColor = inputElement.parentElement
 
+        //Lấy ra các rules của selector
+        var rules = selectorRules[rule.selector];
+        //Lặp qua từng rules và kiểm tra
+        for (var i = 0; i < rules.length; ++i) {
+            var errMessage = rules[i](inputElement.value);
+            if (errMessage) {
+                break;
+            }
+
+        };
         if (errMessage) {
             errMessageRender.innerHTML = errMessage
             errMessageRenderColor.classList.add('invalid')
@@ -17,7 +27,7 @@ Validator = function (options) {
             errMessageRenderColor.classList.remove('invalid')
             errMessageRender.innerHTML = ''
         }
-        console.log(errMessageRender)
+
     }
 
     //lấy ra cả cục chứa cả form 
@@ -25,10 +35,27 @@ Validator = function (options) {
 
 
     if (formElement) {
+        formElement.onsubmit=function(e){
+            e.preventDefault();
+            options.rules.forEach(function (rule) {
+                var inputElement = formElement.querySelector(rule.selector);
+                validate(inputElement,rule)
+                
+            });
+        }
+        //lưu lại các rules cho mỗi input
         options.rules.forEach(function (rule) {
-            console.log('rule là :' + rule)
+            if (Array.isArray(selectorRules[rule.selector])) {
+                selectorRules[rule.selector].push(rule.test);
 
-            
+            } else {
+
+                selectorRules[rule.selector] = [rule.test];
+            }
+            // console.log(selectorRules[rule.selector])
+            // console.log('rule là :' + rule)
+
+
 
             // inputElement là các cái dòng input nhập vào
 
@@ -51,6 +78,7 @@ Validator = function (options) {
                 }
             }
         })
+
     }
 }
 
@@ -58,25 +86,25 @@ Validator = function (options) {
 //Nguyên tắc của các rules
 //1.khi có lỗi thì trả ra messages lỗi
 //2.khi không có lỗi thì không trả ra cái gì cả 
-Validator.isRequired = function (selector) {
+Validator.isRequired = function (selector, message) {
     return {
         selector: selector,
         test: function (value) {
 
 
-            return value.trim() ? '' : 'Vui long nhap truong nay !'
+            return value.trim() ? '' : message || 'Vui long nhap truong nay !'
 
         }
     }
 }
 
 
-Validator.isEmail = function (selector) {
+Validator.isEmail = function (selector, message) {
     return {
         selector: selector,
         test: function (value) {
             var regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-            return regex.test(value) ? '' : 'Vui long nhap email !'
+            return regex.test(value) ? '' : message || 'Vui long nhap email !'
 
 
         }
@@ -84,16 +112,16 @@ Validator.isEmail = function (selector) {
 }
 
 
-Validator.isPassword = function (selector,length) {
+Validator.isPassword = function (selector, length, message) {
     return {
         selector: selector,
         test: function (value) {
-            
-            if (value.length>=length) {
+
+            if (value.length >= length) {
                 return '';
             } else {
 
-                return 'Vui long nhap du 6 ky tu !'
+                return message || 'Vui long nhap du 6 ky tu !'
             }
 
 
@@ -104,6 +132,11 @@ Validator.isPassword = function (selector,length) {
 }
 
 
-Validator.isConFirmed = function (selector){
-
+Validator.isConFirmed = function (selector, passwordConfirmation, message) {
+    return {
+        selector: selector,
+        test: function (value) {
+            return value === passwordConfirmation() ? '' : message || 'Vui long nhap lai'
+        }
+    }
 }
